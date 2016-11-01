@@ -10,8 +10,7 @@ import plotly.graph_objs as go
 
 USER_NAME = os.environ['PLOTLY_USER_NAME']
 API_KEY = os.environ['PLOTLY_API_KEY']
-#USER_NAME = "TitoMeza"
-#API_KEY = "ub0l0o82yw"
+
 py.sign_in(username=USER_NAME, api_key=API_KEY)
 
 
@@ -130,6 +129,8 @@ def dashboard(work_order, payable):
                       & (payable_wo.SUBTYPE <> 'Referral')), 'TYPE'] = 'Managed Work'
     payable_wo_ins = payable_wo[payable_wo['TYPE'].isin(['Inspection'])]
     payable_wo_mw = payable_wo[payable_wo['TYPE'].isin(['Managed Work'])]
+    payable_wo_mw = payable_wo_mw.sort_values('YEAR', ascending=True)
+
 
     #now = datetime.datetime.now()
     #this_year = now.year
@@ -154,6 +155,7 @@ def bar_chart_url(payable_wo):
     '''
 
     payable_wo_year = payable_wo.groupby('YEAR', as_index=False).sum()
+    #payable_wo_year['YEAR'] = payable_wo_year['YEAR'].astype(str)
     payable_wo_year = payable_wo_year.round(decimals=2)
     year_values = payable_wo_year['YEAR'].values.tolist()
     charge_values = payable_wo_year['CHARGE_TOTAL'].values.tolist()
@@ -162,6 +164,8 @@ def bar_chart_url(payable_wo):
     scroll_max = payable_wo_year['CHARGE_TOTAL'].max() / 20
     if scroll_max < 5:
         scroll_max = 5
+
+    nticks = len(payable_wo_year.index)
 
     data = [
         go.Bar(
@@ -173,7 +177,8 @@ def bar_chart_url(payable_wo):
 
     layout = go.Layout(
         xaxis=dict(
-            title="Year"
+            title="Year",
+            nticks=nticks
         ),
         yaxis=dict(
             title="Amount"
@@ -281,6 +286,7 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
 
     payable_wo_fig['NUMBER_INS'] = payable_wo_fig['NUMBER_INS'].astype('int64')
     payable_wo_fig['NUMBER_MW'] = payable_wo_fig['NUMBER_MW'].astype('int64')
+    payable_wo_fig['YEAR'] = payable_wo_fig['YEAR'].astype(str)
 
     year_values = payable_wo_fig['YEAR'].values.tolist()
     charge_values_ins = payable_wo_fig['CHARGE_TOTAL_INS'].values.tolist()
@@ -295,6 +301,8 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
     scroll_max_mw = payable_wo_fig['CHARGE_TOTAL_MW'].max() / 20
     if scroll_max_mw < 5:
         scroll_max_mw = 5
+
+    nticks = len(payable_wo_fig.index)
 
     trace1 = \
         go.Bar(
@@ -330,7 +338,9 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
                                 showarrow=False))
 
     fig['layout']['xaxis1'].update(title='Year')
+    fig['layout']['xaxis1'].update(nticks=nticks)
     fig['layout']['xaxis2'].update(title='Year')
+    fig['layout']['xaxis2'].update(nticks=nticks)
     fig['layout']['yaxis1'].update(title='Amount')
     fig['layout']['yaxis2'].update(title='Amount')
     fig['layout'].update(showlegend=False,
