@@ -9,39 +9,33 @@
         <div class="row">
             <h2>{{ vendor_name }}</h2>
         </div>
-        <div class=""row">
-            <div class="col-md-6">
-                <img src={{ dash_list[0]+".png" }} class="barchart" alt="Bar Chart" id="chart">
-            </div>
+        <div class="row">
+            <img src={{ dash_list[0]+".png" }} class="barchart" alt="Bar Chart" id="chart">
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <img src={{ dash_list[11]+".png" }} class="img-responsive" alt="Bar Chart with Subplots">
-            </div>
+            <img src={{ dash_list[11]+".png" }} class="img-responsive" alt="Bar Chart with Subplots">
         </div>
         <div class="row">
-            <div class="col-md-4">
-                <h4>Inspections:</h4>
-                <ul>
-                    <li>Number of inspections {{ dash_list[1] }}</li>
-                    <li>Total made from inspections: {{ dash_list[3] }}</li>
-                    <li>Average invoice per inspection: {{ dash_list[4] }}</li>
-                </ul>
-                <h4>Managed Work:</h4>
-                <ul>
-                    <li>Number of managed works: {{ dash_list[5] }}</li>
-                    <li>Total made from managed works: {{ dash_list[7] }}</li>
-                    <li>Average invoice per managed work: {{ dash_list[8] }}</li>
-                </ul>
-                <h4>Total made from BPW:</h4>
-                <ul>
-                    <li>Number of jobs done: {{ dash_list[9] }}</li>
-                    <li>Total made from jobs: {{ dash_list[10] }}</li>
-                </ul>
-            </div>
-            <div class="col-md-8">
-                <img src={{ dash_list[12]+".png" }} class="img-responsive" alt="Pie Chart" id="piechart">
-            </div>
+            <h4>Inspections:</h4>
+            <ul>
+                <li>Number of inspections {{ dash_list[1] }}</li>
+                <li>Total made from inspections: {{ dash_list[3] }}</li>
+                <li>Average invoice per inspection: {{ dash_list[4] }}</li>
+            </ul>
+            <h4>Managed Work:</h4>
+            <ul>
+                <li>Number of managed works: {{ dash_list[5] }}</li>
+                <li>Total made from managed works: {{ dash_list[7] }}</li>
+                <li>Average invoice per managed work: {{ dash_list[8] }}</li>
+            </ul>
+            <h4>Total made from BPW:</h4>
+            <ul>
+                <li>Number of jobs done: {{ dash_list[9] }}</li>
+                <li>Total made from jobs: {{ dash_list[10] }}</li>
+            </ul>
+        </div>
+        <div class="row">
+            <img src={{ dash_list[12]+".png" }} class="img-responsive" alt="Pie Chart" id="piechart">
         </div>
     </div>
 {% endblock %}
