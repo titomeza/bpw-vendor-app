@@ -192,7 +192,7 @@ def bar_chart_url(payable_wo):
     for x0, y0, n0 in zip(year_values, charge_values, number_values):
         annotations.append(dict(xref='x0', yref='y0',
                                 y=y0 + scroll_max, x=x0,
-                                text="${:,.2f}\n{}".format(y0, n0),
+                                text="${:,.2f}<br>{}".format(y0, n0),
                                 font=dict(family='Arial', size=12,
                                           color='rgb(50, 171, 96)'),
                                 showarrow=False))
@@ -344,7 +344,7 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
     for x2, y2, n2 in zip(year_values, charge_values_mw, number_values_mw):
         annotations.append(dict(xref='x2', yref='y2',
                                 y=y2 + scroll_max, x=x2 + 0.21,
-                                text="${:,.2f}\n{}".format(y2, n2),
+                                text="${:,.2f}<br>{}".format(y2, n2),
                                 font=dict(family='Arial', size=10,
                                           color='rgb(50, 171, 96)'),
                                 showarrow=False))
