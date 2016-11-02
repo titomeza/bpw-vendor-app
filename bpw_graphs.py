@@ -10,6 +10,8 @@ import plotly.graph_objs as go
 
 USER_NAME = os.environ['PLOTLY_USER_NAME']
 API_KEY = os.environ['PLOTLY_API_KEY']
+#USER_NAME = ''
+#API_KEY = ''
 
 py.sign_in(username=USER_NAME, api_key=API_KEY)
 
@@ -286,7 +288,7 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
 
     payable_wo_fig['NUMBER_INS'] = payable_wo_fig['NUMBER_INS'].astype('int64')
     payable_wo_fig['NUMBER_MW'] = payable_wo_fig['NUMBER_MW'].astype('int64')
-    payable_wo_fig['YEAR'] = payable_wo_fig['YEAR'].astype(str)
+    #payable_wo_fig['YEAR'] = payable_wo_fig['YEAR'].astype(str)
 
     year_values = payable_wo_fig['YEAR'].values.tolist()
     charge_values_ins = payable_wo_fig['CHARGE_TOTAL_INS'].values.tolist()
@@ -302,83 +304,73 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
     if scroll_max_mw < 5:
         scroll_max_mw = 5
 
+    scroll_max = max([scroll_max_ins, scroll_max_mw])
+
     nticks = len(payable_wo_fig.index)
 
-    trace1 = \
-        go.Bar(
-            x=payable_wo_fig['YEAR'],
-            y=payable_wo_fig['CHARGE_TOTAL_INS']
-        )
+    trace1 = go.Bar(
+        x=payable_wo_fig['YEAR'],
+        y=payable_wo_fig['CHARGE_TOTAL_INS'],
+        name='Inspections'
+    )
 
-    trace2 = \
-        go.Bar(
-            x=payable_wo_fig['YEAR'],
-            y=payable_wo_fig['CHARGE_TOTAL_MW']
-        )
+    trace2 = go.Bar(
+        x=payable_wo_fig['YEAR'],
+        y=payable_wo_fig['CHARGE_TOTAL_MW'],
+        name='Managed Works'
+    )
 
-    fig = tools.make_subplots(rows=1, cols=2, subplot_titles=["<b>Inspections</b>", "<b>Managed Work</b>"])
-    fig.append_trace(trace1, 1, 1)
-    fig.append_trace(trace2, 1, 2)
+    trace1 = go.Bar(
+        x=payable_wo_fig['YEAR'],
+        y=payable_wo_fig['CHARGE_TOTAL_INS'],
+        name='Inspections'
+    )
+
+    trace2 = go.Bar(
+        x=payable_wo_fig['YEAR'],
+        y=payable_wo_fig['CHARGE_TOTAL_MW'],
+        name='Managed Works'
+    )
 
     annotations = []
     for x1, y1, n1 in zip(year_values, charge_values_ins, number_values_ins):
         annotations.append(dict(xref='x1', yref='y1',
-                                y=y1 + scroll_max_ins, x=x1,
-                                text="${:,.2f}\n{}".format(y1, n1),
-                                font=dict(family='Arial', size=12,
+                                y=y1 + scroll_max, x=x1 - 0.21,
+                                text="${:,.2f}<br>{}".format(y1, n1),
+                                font=dict(family='Arial', size=10,
                                           color='rgb(50, 171, 96)'),
                                 showarrow=False))
 
     for x2, y2, n2 in zip(year_values, charge_values_mw, number_values_mw):
         annotations.append(dict(xref='x2', yref='y2',
-                                y=y2 + scroll_max_mw, x=x2,
+                                y=y2 + scroll_max, x=x2 + 0.21,
                                 text="${:,.2f}\n{}".format(y2, n2),
-                                font=dict(family='Arial', size=12,
+                                font=dict(family='Arial', size=10,
                                           color='rgb(50, 171, 96)'),
                                 showarrow=False))
 
-    fig['layout']['xaxis1'].update(title='Year')
-    fig['layout']['xaxis1'].update(nticks=nticks)
-    fig['layout']['xaxis2'].update(title='Year')
-    fig['layout']['xaxis2'].update(nticks=nticks)
-    fig['layout']['yaxis1'].update(title='Amount')
-    fig['layout']['yaxis2'].update(title='Amount')
-    fig['layout'].update(showlegend=False,
+    data = [trace1, trace2]
+    layout = go.Layout(
+        barmode='group'
+    )
+    fig = go.Figure(data=data, layout=layout)
+
+    fig['layout']['xaxis'].update(title='Year')
+    fig['layout']['xaxis'].update(tickmode='linear')
+    fig['layout']['xaxis'].update(tick0=0)
+    fig['layout']['xaxis'].update(dtick=1)
+    fig['layout']['xaxis'].update(showticklabels='true')
+    fig['layout']['yaxis'].update(title='Amount')
+
+    fig['layout'].update(showlegend=True,
                          height=500,
                          width=1000,
                          # autosize='true',
                          title='<b>Total made per year</b>',
                          paper_bgcolor='rgb(248, 248, 255)',
                          plot_bgcolor='rgb(248, 248, 255)',
-                         annotations=dict(font=dict(size=14)))
-    fig['layout']['annotations'] += annotations
-
-    # for x2, y2 in zip(proj_labels, proj_values):
-    #    annotations.append(dict(xref='x2', yref='y2',
-    #                            y=y2 + 0.3, x=x2,
-    #                            text="${:,.2f}".format(y2),
-    #                            font=dict(family='Arial', size=12,
-    #                                      color='rgb(50, 171, 96)'),
-    #                            showarrow=False))
-
-    # Footer
-    # annotations.append(dict(xref='paper', yref='paper',
-    #                        x='center', y="paper",
-    #                        text='AVERAGE COST PER PROJECT (2016):${:,.0f}'.format(avg_cost),
-    #                        font=dict(family='Arial', size=12),
-    #                        showarrow=False))
-
-    # fig['layout'].update(showlegend=False,
-    #                     title='<b>TOTAL NUMBER OF PROJECTS DONE - {} BOUGHT</b>'.format(total_bought),
-    #                     paper_bgcolor='rgb(248, 248, 255)',
-    #                     plot_bgcolor='rgb(248, 248, 255)',
-    #                     font=dict(size=10),
-    #                     height=500,
-    #                     width=1000,
-    #                     titlefont=dict(size=18),
-    #                     annotations=dict(font=dict(size=10)))
-
-    # fig['layout']['annotations'] += annotations
+                         annotations=annotations
+                         )
 
     return py.plot(fig, auto_open=False, filename='Project Snapshot')
 
