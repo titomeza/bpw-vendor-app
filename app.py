@@ -5,20 +5,21 @@ from flask_moment import Moment
 from flask_wtf import Form
 from wtforms import DateField, StringField, SubmitField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms.validators import DataRequired #, Regexp
+from wtforms.validators import DataRequired  # , Regexp
 from flask_weasyprint import HTML, render_pdf, CSS
 
 from bpw_graphs import dashboard
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
-#app.config['SECRET_KEY'] = 'BPW DashBoard BizHaus'
+# app.config['SECRET_KEY'] = 'BPW DashBoard BizHaus'
 
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 
+
 class UploadForm(Form):
-    vendor = StringField('Vendor Name', validators = [DataRequired()])
+    vendor = StringField('Vendor Name', validators=[DataRequired()])
 
     work_order = FileField('Work_Order_Export file', validators=[
         FileRequired(),
@@ -48,32 +49,25 @@ def index():
         session['vendor_name'] = vendor_name
         session['dash_list'] = dash_list
         return redirect(url_for('dash'))
-    return render_template("index.html", form = form)
+    return render_template("index.html", form=form)
 
 
 @app.route('/dashboard')
 def dash():
     dash_list = session.get('dash_list')
     vendor_name = session.get('vendor_name')
-    return render_template('dashboard.html', dash_list = dash_list,
-                           vendor_name = vendor_name)
+    return render_template('dashboard.html', dash_list=dash_list,
+                           vendor_name=vendor_name)
+
 
 @app.route('/dashboard.pdf')
 def dash_pdf():
     dash_list = session.get('dash_list')
     vendor_name = session.get('vendor_name')
-    html = render_template('dashboard_pdf.html', dash_list = dash_list,
-                           vendor_name = vendor_name)
-    return render_pdf(HTML(string=html),
-                      stylesheets=[
-                          CSS(string='@page { size: A3 portrait;'
-                                'background-color: #f8f8ff ;'
-                                ' margin: 2cm };'
-                                '* { float: none !important; };'
-                                '@media print { nav { display: none; }'
-                                '.barchart{width:200px; }'
-                          )
-                      ])
+    html = render_template('dashboard_pdf.html', dash_list=dash_list,
+                           vendor_name=vendor_name)
+    return render_pdf(HTML(string=html))
+
 
 if __name__ == '__main__':
     app.run()
