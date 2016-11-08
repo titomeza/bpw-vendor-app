@@ -2,7 +2,7 @@ import re
 import os
 import pandas as pd
 from numpy import array, isfinite
-#import datetime
+# import datetime
 
 import plotly.plotly as py
 import plotly.tools as tools
@@ -10,8 +10,8 @@ import plotly.graph_objs as go
 
 USER_NAME = os.environ['PLOTLY_USER_NAME']
 API_KEY = os.environ['PLOTLY_API_KEY']
-#USER_NAME = ''
-#API_KEY = ''
+# USER_NAME = ''
+# API_KEY = ''
 
 py.sign_in(username=USER_NAME, api_key=API_KEY)
 
@@ -133,9 +133,8 @@ def dashboard(work_order, payable):
     payable_wo_mw = payable_wo[payable_wo['TYPE'].isin(['Managed Work'])]
     payable_wo_mw = payable_wo_mw.sort_values('YEAR', ascending=True)
 
-
-    #now = datetime.datetime.now()
-    #this_year = now.year
+    # now = datetime.datetime.now()
+    # this_year = now.year
 
     dashboard_values = [bar_chart_url(payable_wo)]
 
@@ -157,7 +156,7 @@ def bar_chart_url(payable_wo):
     '''
 
     payable_wo_year = payable_wo.groupby('YEAR', as_index=False).sum()
-    #payable_wo_year['YEAR'] = payable_wo_year['YEAR'].astype(str)
+    # payable_wo_year['YEAR'] = payable_wo_year['YEAR'].astype(str)
     payable_wo_year = payable_wo_year.round(decimals=2)
     year_values = payable_wo_year['YEAR'].values.tolist()
     charge_values = payable_wo_year['CHARGE_TOTAL'].values.tolist()
@@ -288,7 +287,7 @@ def second_graph_url(payable_wo_ins, payable_wo_mw):
 
     payable_wo_fig['NUMBER_INS'] = payable_wo_fig['NUMBER_INS'].astype('int64')
     payable_wo_fig['NUMBER_MW'] = payable_wo_fig['NUMBER_MW'].astype('int64')
-    #payable_wo_fig['YEAR'] = payable_wo_fig['YEAR'].astype(str)
+    # payable_wo_fig['YEAR'] = payable_wo_fig['YEAR'].astype(str)
 
     year_values = payable_wo_fig['YEAR'].values.tolist()
     charge_values_ins = payable_wo_fig['CHARGE_TOTAL_INS'].values.tolist()
@@ -396,10 +395,10 @@ def pie_chart_url(total_made_inspections, total_made_mw):
                   'sort': False,
                   'type': 'pie'}],
         'layout': {'title': '<b>Total made from BPW</b><br><i>Per Inspections and Managed Works</i>',
-                    "autosize": False,
-                    "height": 480,
-                    "width": 600
-                    }
+                   "autosize": False,
+                   "height": 480,
+                   "width": 600
+                   }
     }
 
     fig['layout'].update(paper_bgcolor='rgb(248, 248, 255)',
