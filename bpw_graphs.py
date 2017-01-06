@@ -20,7 +20,7 @@ py.sign_in(username=USER_NAME, api_key=API_KEY)
 # that is required for the dashboard
 
 
-def dashboard(work_order, payable):
+def dashboard(payable):
     # type: (file, file) -> dictionary
     # Dashboard reads 2 CSV files
     # Returns in a dictionary:
@@ -40,11 +40,9 @@ def dashboard(work_order, payable):
     # First we read in the 2 files that we are going to need to make the report
 
     '''
-    :param work_order: csv file containing work order report
     :param payable: csv file containing receivables info
     '''
 
-    work_order = pd.read_csv(work_order)
     payable = pd.read_csv(payable,
                           parse_dates=['SHIP_DATE'],
                           infer_datetime_format=True)
@@ -53,7 +51,8 @@ def dashboard(work_order, payable):
 
     payable['CHARGE_SUBTOTAL'] = payable['CHARGE_SUBTOTAL'].str.replace(r'[$,]', '').astype('float')
     payable['CHARGE_TOTAL'] = payable['CHARGE_TOTAL'].str.replace(r'[$,]', '').astype('float')
-    payable = payable.rename(columns={'WO NUM': 'WORKORDER_ID'})
+    payable = payable.rename(columns={'WO TYPE': 'WO_TYPE', 'WO SUBTYPE': 'WO_SUBTYPE'})
+    payable['TYPE'] = payable['PO_ID']
     payable['YEAR'] = payable['SHIP_DATE'].dt.year
     payable['NUMBER'] = 1
 
@@ -83,64 +82,32 @@ def dashboard(work_order, payable):
                             'USE_TAX',
                             'USE_TAX_AMOUNT',
                             'WHOMODIFIED',
-                            'PO_ID',
                             'VENDOR_INV_NUM',
                             'DISCOUNT_DATE',
                             'DATEMODIFIED'], axis=1)
 
-    payable_wo = pd.merge(payable, work_order, on='WORKORDER_ID')
-
-    payable_wo = payable_wo.drop(['ALTNUMBER',
-                                  'WORKORDER_ID',
-                                  'CLIENTNUMBER',
-                                  'WHOCREATED',
-                                  'STATUS',
-                                  'DATECREATED',
-                                  'REGION',
-                                  'STATE',
-                                  'ZIP',
-                                  'STATUSDATE',
-                                  'STATUSWHO',
-                                  'BUILDING_ID',
-                                  'BUILDING_NAME',
-                                  'AREA_NAME',
-                                  'STREET_ADDRESS',
-                                  'CITY',
-                                  'WORKDESCRIPTION',
-                                  'ROOFCONDITION',
-                                  'NOTES',
-                                  'BUDGET_AMOUNT',
-                                  'INVOICESTATUS',
-                                  'COMPANY_RELATIONSHIP 1',
-                                  'COMPANY_RELATIONSHIP 2',
-                                  'COMPANY_RELATIONSHIP 3',
-                                  'CONTACT_RELATIONSHIP 1',
-                                  'CONTACT_RELATIONSHIP 2',
-                                  'CONTACT_RELATIONSHIP 3',
-                                  'FINANCIAL_RESPONSIBILITY'], axis=1)
-
-    payable_wo = payable_wo.fillna({'TYPE': 'NOT SPECIFIED', 'SUBTYPE': 'NOT SPECIFIED'})
-    payable_wo.loc[(payable_wo.TYPE == 'NOT SPECIFIED')
-                   & ((payable_wo.SUBTYPE == 'Clean & Inspect')
-                      | (payable_wo.SUBTYPE == 'Inspection')), 'TYPE'] = 'Inspection'
-    payable_wo.loc[payable_wo.TYPE == 'Contracted Work', 'SUBTYPE'] = 'Portfolio'
-    payable_wo.loc[payable_wo.TYPE == 'Contracted Work', 'TYPE'] = 'Inspection'
-    payable_wo.loc[(payable_wo.TYPE == 'NOT SPECIFIED')
-                   & ((payable_wo.SUBTYPE <> 'NOT SPECIFIED')
-                      & (payable_wo.SUBTYPE <> 'Other trade')
-                      & (payable_wo.SUBTYPE <> 'Referral')), 'TYPE'] = 'Managed Work'
-    payable_wo_ins = payable_wo[payable_wo['TYPE'].isin(['Inspection'])]
-    payable_wo_mw = payable_wo[payable_wo['TYPE'].isin(['Managed Work'])]
-    payable_wo_mw = payable_wo_mw.sort_values('YEAR', ascending=True)
+    # payable_wo = payable_wo.fillna({'TYPE': 'NOT SPECIFIED', 'SUBTYPE': 'NOT SPECIFIED'})
+    # payable_wo.loc[(payable_wo.TYPE == 'NOT SPECIFIED')
+    #                & ((payable_wo.SUBTYPE == 'Clean & Inspect')
+    #                   | (payable_wo.SUBTYPE == 'Inspection')), 'TYPE'] = 'Inspection'
+    #payable_wo.loc[payable_wo.TYPE == 'Contracted Work', 'SUBTYPE'] = 'Portfolio'
+    payable.loc[payable.TYPE == 'Contracted Work', 'TYPE'] = 'Managed Work' # 'Inspection'
+    # payable_wo.loc[(payable_wo.TYPE == 'NOT SPECIFIED')
+    #                & ((payable_wo.SUBTYPE <> 'NOT SPECIFIED')
+    #                   & (payable_wo.SUBTYPE <> 'Other trade')
+    #                   & (payable_wo.SUBTYPE <> 'Referral')), 'TYPE'] = 'Managed Work'
+    payable_ins = payable[payable['TYPE'].isin(['Inspection'])]
+    payable_mw = payable[payable['TYPE'].isin(['Managed Work'])]
+    payable_mw = payable_mw.sort_values('YEAR', ascending=True)
 
     # now = datetime.datetime.now()
     # this_year = now.year
 
-    dashboard_values = [bar_chart_url(payable_wo)]
+    dashboard_values = [bar_chart_url(payable)]
 
-    dashboard_values = dashboard_values + upper_right_stats(payable_wo, payable_wo_ins, payable_wo_mw)
+    dashboard_values = dashboard_values + upper_right_stats(payable, payable_ins, payable_mw)
 
-    dashboard_values = dashboard_values + [second_graph_url(payable_wo_ins, payable_wo_mw)]
+    dashboard_values = dashboard_values + [second_graph_url(payable_ins, payable_mw)]
 
     dashboard_values = dashboard_values + [pie_chart_url(dashboard_values[2], dashboard_values[6])]
 
@@ -149,29 +116,29 @@ def dashboard(work_order, payable):
     return dashboard_values
 
 
-def bar_chart_url(payable_wo):
+def bar_chart_url(payable):
     '''
-    :param payable_wo: a panda dataframe  with work order and payable information
+    :param payable: a panda dataframe  with work order and payable information
     :return: a url for a plotly bar chart
     '''
 
-    payable_wo_year = payable_wo.groupby('YEAR', as_index=False).sum()
+    payable_year = payable.groupby('YEAR', as_index=False).sum()
     # payable_wo_year['YEAR'] = payable_wo_year['YEAR'].astype(str)
-    payable_wo_year = payable_wo_year.round(decimals=2)
-    year_values = payable_wo_year['YEAR'].values.tolist()
-    charge_values = payable_wo_year['CHARGE_TOTAL'].values.tolist()
-    number_values = payable_wo_year['NUMBER'].values.tolist()
+    payable_year = payable_year.round(decimals=2)
+    year_values = payable_year['YEAR'].values.tolist()
+    charge_values = payable_year['CHARGE_TOTAL'].values.tolist()
+    number_values = payable_year['NUMBER'].values.tolist()
 
-    scroll_max = payable_wo_year['CHARGE_TOTAL'].max() / 20
+    scroll_max = payable_year['CHARGE_TOTAL'].max() / 20
     if scroll_max < 5:
         scroll_max = 5
 
-    nticks = len(payable_wo_year.index)
+    nticks = len(payable_year.index)
 
     data = [
         go.Bar(
-            x=payable_wo_year['YEAR'],
-            y=payable_wo_year['CHARGE_TOTAL'],
+            x=payable_year['YEAR'],
+            y=payable_year['CHARGE_TOTAL'],
             name="bar chart example"
         )
     ]
@@ -203,15 +170,20 @@ def bar_chart_url(payable_wo):
                          annotations=annotations,
                          title='<b>Total made per year</b><br><i>Inspections and Managed Work</i>')
 
+    fig['layout']['xaxis'].update(tickmode='linear')
+    fig['layout']['xaxis'].update(tick0=0)
+    fig['layout']['xaxis'].update(dtick=1)
+    fig['layout']['xaxis'].update(showticklabels='true')
+
     return py.plot(fig, filename='BPW Bar Chart', auto_open=False, )
 
 
-def upper_right_stats(payable_wo, payable_wo_ins, payable_wo_mw):
+def upper_right_stats(payable, payable_ins, payable_mw):
     '''
     :rtype: dict
-    :param worders: a pandas frame of work orders
-    :param receivables: a pandas frame of receivables
-    :param start_date: start date of the report
+    :param payable: a pandas frame of payables
+    :param payable_ins: a pandas frame of inspections
+    :param payable_mw: a pandas frame of managed works
     :return: a dictionary with
     # Returns in a dictionary:
     # 1)  Number of inspections
@@ -224,25 +196,25 @@ def upper_right_stats(payable_wo, payable_wo_ins, payable_wo_mw):
     # 8)  Total made from jobs
     '''
 
-    number_jobs = len(payable_wo.index)
-    total_made = payable_wo['CHARGE_TOTAL'].sum()
+    number_jobs = len(payable.index)
+    total_made = payable['CHARGE_TOTAL'].sum()
     total_made_text = '${:,.2f}'.format(total_made)
 
-    number_inspections = len(payable_wo_ins.index)
-    total_made_inspections = payable_wo_ins['CHARGE_TOTAL'].sum()
+    number_inspections = len(payable_ins.index)
+    total_made_inspections = payable_ins['CHARGE_TOTAL'].sum()
     total_made_inspections_text = '${:,.2f}'.format(total_made_inspections)
     average_x_inspections = 0.0
     if number_inspections <> 0:
-        average_x_inspections = payable_wo_ins['CHARGE_TOTAL'].mean()
+        average_x_inspections = payable_ins['CHARGE_TOTAL'].mean()
 
     average_x_inspections_text = '${:,.2f}'.format(average_x_inspections)
 
-    number_mw = len(payable_wo_mw.index)
-    total_made_mw = payable_wo_mw['CHARGE_TOTAL'].sum()
+    number_mw = len(payable_mw.index)
+    total_made_mw = payable_mw['CHARGE_TOTAL'].sum()
     total_made_mw_text = '${:,.2f}'.format(total_made_mw)
     average_x_mw = 0.0
     if number_mw <> 0:
-        average_x_mw = payable_wo_mw['CHARGE_TOTAL'].mean()
+        average_x_mw = payable_mw['CHARGE_TOTAL'].mean()
     average_x_mw_text = '${:,.2f}'.format(average_x_mw)
 
     return [
@@ -259,29 +231,29 @@ def upper_right_stats(payable_wo, payable_wo_ins, payable_wo_mw):
     ]
 
 
-def second_graph_url(payable_wo_ins, payable_wo_mw):
+def second_graph_url(payable_ins, payable_mw):
     '''
-    :param payable_wo_ins: pandas dataframe
-    :param payable_wo_mw: pandas dataframe
+    :param payable_ins: pandas dataframe
+    :param payable_mw: pandas dataframe
     :return: second url for graph
     '''
 
-    payable_wo_ins_year = payable_wo_ins.groupby('YEAR', as_index=False).sum()
-    payable_wo_ins_year = payable_wo_ins_year.round(decimals=2)
+    payable_ins_year = payable_ins.groupby('YEAR', as_index=False).sum()
+    payable_ins_year = payable_ins_year.round(decimals=2)
 
-    payable_wo_mw_year = payable_wo_mw.groupby('YEAR', as_index=False).sum()
-    payable_wo_mw_year = payable_wo_mw_year.round(decimals=2)
+    payable_mw_year = payable_mw.groupby('YEAR', as_index=False).sum()
+    payable_mw_year = payable_mw_year.round(decimals=2)
 
-    payable_wo_ins_year = payable_wo_ins_year.rename(columns={'CHARGE_TOTAL': 'CHARGE_TOTAL_INS',
+    payable_ins_year = payable_ins_year.rename(columns={'CHARGE_TOTAL': 'CHARGE_TOTAL_INS',
                                                               'NUMBER': 'NUMBER_INS'})
 
-    payable_wo_mw_year = payable_wo_mw_year.rename(columns={'CHARGE_TOTAL': 'CHARGE_TOTAL_MW',
+    payable_mw_year = payable_mw_year.rename(columns={'CHARGE_TOTAL': 'CHARGE_TOTAL_MW',
                                                             'NUMBER': 'NUMBER_MW'})
     # temporal
     # payable_wo_mw_year = payable_wo_mw_year.drop(payable_wo_mw_year.index[[0, 1, 2, 3]])
     # temporal
 
-    payable_wo_fig = pd.merge(payable_wo_ins_year, payable_wo_mw_year, on='YEAR', how='outer')
+    payable_wo_fig = pd.merge(payable_ins_year, payable_mw_year, on='YEAR', how='outer')
 
     payable_wo_fig = payable_wo_fig.fillna(0)
 

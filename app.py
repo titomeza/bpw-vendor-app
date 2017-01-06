@@ -11,8 +11,8 @@ from flask_weasyprint import HTML, render_pdf, CSS
 from bpw_graphs import dashboard
 
 app = Flask(__name__)
-app.config.from_object(os.environ['APP_SETTINGS'])
-# app.config['SECRET_KEY'] = 'BPW DashBoard BizHaus'
+# app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['SECRET_KEY'] = 'BPW DashBoard BizHaus'
 
 bootstrap = Bootstrap(app)
 moment = Moment(app)
@@ -20,11 +20,6 @@ moment = Moment(app)
 
 class UploadForm(Form):
     vendor = StringField('Vendor Name', validators=[DataRequired()])
-
-    work_order = FileField('Work_Order_Export file', validators=[
-        FileRequired(),
-        FileAllowed(['csv'], 'CSV Files Only!')
-    ])
 
     payable = FileField('DF_Standard_Accounts_Payable_Export file', validators=[
         FileRequired(),
@@ -37,12 +32,11 @@ class UploadForm(Form):
 def index():
     form = UploadForm()
     if form.validate_on_submit():
-        work_order = form.work_order.data.stream
         payable = form.payable.data.stream
         try:
-            dash_list = dashboard(work_order, payable)
+            dash_list = dashboard(payable)
         except:
-            flash('One or more of the CSV files is the wrong file')
+            flash('The CSV file is the wrong file')
             return redirect(url_for('index'))
         vendor_name = form.vendor.data
         form.vendor.data = ''
@@ -70,4 +64,4 @@ def dash_pdf():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
