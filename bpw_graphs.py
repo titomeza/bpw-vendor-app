@@ -91,7 +91,7 @@ def dashboard(payable):
     #                & ((payable_wo.SUBTYPE == 'Clean & Inspect')
     #                   | (payable_wo.SUBTYPE == 'Inspection')), 'TYPE'] = 'Inspection'
     #payable_wo.loc[payable_wo.TYPE == 'Contracted Work', 'SUBTYPE'] = 'Portfolio'
-    payable.loc[payable.TYPE == 'Contracted Work', 'TYPE'] = 'Managed Work' # 'Inspection'
+    payable.loc[payable.TYPE == 'Contracted Work', 'TYPE'] = 'Inspection'
     # payable_wo.loc[(payable_wo.TYPE == 'NOT SPECIFIED')
     #                & ((payable_wo.SUBTYPE <> 'NOT SPECIFIED')
     #                   & (payable_wo.SUBTYPE <> 'Other trade')
